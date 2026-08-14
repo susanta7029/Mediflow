@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build & Target Outputs
+backend/target/
+frontend/.next/
+frontend/out/
+build/
+dist/
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Environment & Secret files
+.env
+.env.local
+.env.production
+*.log
+
+# Scratch / Temp
+untitled/
