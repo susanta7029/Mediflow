@@ -5,6 +5,7 @@ import com.mediflow.entity.*;
 import com.mediflow.exception.BadRequestException;
 import com.mediflow.exception.ResourceNotFoundException;
 import com.mediflow.repository.AppointmentRepository;
+import com.mediflow.repository.InvoiceRepository;
 import com.mediflow.repository.QueueEntryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
