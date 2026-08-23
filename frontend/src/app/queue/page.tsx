@@ -63,11 +63,14 @@ export default function QueuePage() {
   };
 
   const handleStatusUpdate = async (queueId: number, status: string) => {
+    setActionMessage("");
     try {
       await queueService.updateStatus(queueId, status);
+      setActionMessage("Consultation marked as COMPLETED successfully!");
       fetchQueueData();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to update queue status");
+      const msg = err.response?.data?.message || "Failed to update queue status";
+      setActionMessage(msg);
     }
   };
 
@@ -175,7 +178,7 @@ export default function QueuePage() {
               <div className="text-4xl font-extrabold text-white">Q-{currentPatientInRoom.queueNumber}</div>
               <div className="text-sm font-semibold text-slate-200">{currentPatientInRoom.patientName}</div>
               <div className="text-xs text-slate-400">Doctor: {currentPatientInRoom.doctorName}</div>
-              {user?.role === "DOCTOR" ? (
+              {(user?.role === "DOCTOR" || user?.role === "ADMIN") ? (
                 <button
                   onClick={() => handleStatusUpdate(currentPatientInRoom.id, "COMPLETED")}
                   className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl w-full transition-colors"

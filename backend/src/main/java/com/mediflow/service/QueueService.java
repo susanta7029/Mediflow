@@ -131,6 +131,7 @@ public class QueueService {
         QueueEntry entry = queueEntryRepository.findById(queueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Queue entry not found with ID: " + queueId));
 
+        entry.setStatus(status);
         if (status == QueueStatus.COMPLETED) {
             java.util.Optional<Invoice> invoiceOpt = invoiceRepository.findByAppointmentId(entry.getAppointment().getId());
             if (invoiceOpt.isPresent()) {
