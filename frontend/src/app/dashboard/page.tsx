@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import { dashboardService } from "@/services/api";
-import { DashboardStats } from "@/types";
+import { dashboardService, doctorService, patientService } from "@/services/api";
+import { DashboardStats, Doctor, Patient } from "@/types";
 import {
   Users,
   UserCheck,
@@ -24,12 +24,16 @@ import {
   FileText,
   Activity,
   Ticket,
+  ShieldCheck,
+  User,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
+  const [patientsList, setPatientsList] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +42,12 @@ export default function DashboardPage() {
       .then(setStats)
       .catch((err) => console.error("Failed to load dashboard stats", err))
       .finally(() => setIsLoading(false));
-  }, []);
+
+    if (user?.role === "ADMIN") {
+      doctorService.getAll().then(setDoctorsList).catch(console.error);
+      patientService.getAll().then(setPatientsList).catch(console.error);
+    }
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -63,9 +72,9 @@ export default function DashboardPage() {
             Welcome back, {user?.fullName}!
           </h1>
           <p className="text-sky-100 text-sm mt-1 max-w-xl">
-            {role === "ADMIN" && "Real-time overview of hospital performance, doctor schedules, patient counts, and revenue analytics."}
+            {role === "ADMIN" && "Executive supervisor overview of hospital metrics, revenue analytics, staff roster, and patient directory."}
             {role === "DOCTOR" && "Track today's patient queue, active consultations, and pending follow-ups."}
-            {role === "RECEPTIONIST" && "Manage patient check-ins, appointment schedules, and waiting room queue flow."}
+            {role === "RECEPTIONIST" && "Manage patient check-ins, appointment schedules, and front desk payment collection."}
             {role === "PATIENT" && "View your upcoming appointments, prescription records, and active medical billing."}
           </p>
         </div>
@@ -377,14 +386,14 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
+          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-slate-800 text-lg">Department Case Volumes</h3>
                 <p className="text-xs text-slate-400">Total appointments booked by medical department</p>
               </div>
             </div>
-            <div className="h-64">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats?.departmentStats || []}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -400,9 +409,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Recent Appointments List */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        {/* Recent Appointments / Admin Roster */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
             <h3 className="font-bold text-slate-800 text-lg">
               {role === "PATIENT"
                 ? "Your Scheduled Visits"
@@ -413,14 +422,14 @@ export default function DashboardPage() {
                 : "Recent Appointments"}
             </h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-80 overflow-y-auto">
             {stats?.recentAppointments?.length === 0 ? (
               <p className="text-xs text-slate-400 text-center py-6">No appointments recorded yet.</p>
             ) : (
               stats?.recentAppointments?.map((appt) => (
-                <div key={appt.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                <div key={appt.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
                   <div>
-                    <div className="font-semibold text-xs text-slate-800">{appt.patientName}</div>
+                    <div className="font-semibold text-slate-800">{appt.patientName}</div>
                     <div className="text-[11px] text-slate-500">{appt.doctorName} • {appt.timeSlot}</div>
                   </div>
                   <span
@@ -440,6 +449,71 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Admin Master Staff Roster & Patient Directory Section */}
+      {role === "ADMIN" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Active Hospital Doctors Roster */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                <Stethoscope className="w-5 h-5 text-sky-600" /> Active Medical Doctors Roster
+              </h3>
+              <span className="text-xs font-bold px-2.5 py-1 bg-sky-100 text-sky-700 rounded-full">
+                {doctorsList.length} Active
+              </span>
+            </div>
+            <div className="space-y-3">
+              {doctorsList.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-6">No doctors registered yet.</p>
+              ) : (
+                doctorsList.map((doc) => (
+                  <div key={doc.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-slate-800 text-sm">{doc.doctorName}</div>
+                      <div className="text-slate-500 font-medium">{doc.specialization} • {doc.departmentName}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">License: {doc.licenseNumber} • Fee: ${doc.consultationFee}</div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                      Active Staff
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Registered Patients Directory */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" /> Registered Hospital Patients Directory
+              </h3>
+              <span className="text-xs font-bold px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full">
+                {patientsList.length} Patients
+              </span>
+            </div>
+            <div className="space-y-3">
+              {patientsList.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-6">No patients registered yet.</p>
+              ) : (
+                patientsList.map((pat) => (
+                  <div key={pat.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-slate-800 text-sm">{pat.patientName}</div>
+                      <div className="text-slate-500">{pat.email} • {pat.phoneNumber || "No phone"}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">Blood: {pat.bloodGroup || "O+"} • DOB: {pat.dateOfBirth || "N/A"}</div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-sky-100 text-sky-800">
+                      PAT-{pat.id}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
