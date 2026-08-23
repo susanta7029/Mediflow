@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { appointmentService, departmentService, doctorService, patientService } from "@/services/api";
 import { Department, Doctor, Patient, Appointment } from "@/types";
-import { Calendar as CalendarIcon, Clock, Stethoscope, AlertCircle, CheckCircle2, User, Plus, RefreshCw, UserPlus, X } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Stethoscope, AlertCircle, CheckCircle2, User, Plus, RefreshCw, UserPlus, X, Filter } from "lucide-react";
 
 export default function AppointmentsPage() {
   const { user } = useAuth();
@@ -13,8 +13,8 @@ export default function AppointmentsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
-  // Booking Form Visibility & Mode
-  const [showForm, setShowForm] = useState(user?.role !== "DOCTOR");
+  // Booking Form Visibility: Default true for PATIENT and RECEPTIONIST, false for ADMIN & DOCTOR
+  const [showForm, setShowForm] = useState(user?.role === "PATIENT" || user?.role === "RECEPTIONIST");
   const [bookingMode, setBookingMode] = useState<"FOLLOW_UP" | "REFERRAL" | "GENERAL">("GENERAL");
 
   // Booking Form State
@@ -115,13 +115,13 @@ export default function AppointmentsPage() {
       setSuccessMessage(
         bookingMode === "REFERRAL"
           ? "Patient referral appointment booked successfully!"
-          : "Follow-up appointment scheduled successfully!"
+          : "Appointment scheduled successfully!"
       );
       setSelectedSlot("");
       setReason("");
       setSelectedPatient("");
       fetchAppointments();
-      if (user?.role === "DOCTOR") {
+      if (user?.role === "DOCTOR" || user?.role === "ADMIN") {
         setTimeout(() => setShowForm(false), 2000);
       }
     } catch (err: any) {
@@ -136,27 +136,46 @@ export default function AppointmentsPage() {
       {/* Header Banner */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Appointment Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Book doctor consultations with real-time double-booking protection</p>
+          <h1 className="text-2xl font-bold text-slate-800">
+            {user?.role === "ADMIN" ? "Master Hospital Appointments Schedule" : "Appointment Management"}
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            {user?.role === "ADMIN"
+              ? "Comprehensive schedule of all doctor consultations across hospital departments"
+              : "Book doctor consultations with real-time double-booking protection"}
+          </p>
         </div>
 
-        {/* Doctor Quick Action Buttons */}
-        {user?.role === "DOCTOR" && (
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
+          {/* Admin / Receptionist Form Toggle */}
+          {(user?.role === "ADMIN" || user?.role === "RECEPTIONIST") && (
             <button
-              onClick={handleOpenFollowUp}
+              onClick={() => setShowForm(!showForm)}
               className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
             >
-              <RefreshCw className="w-4 h-4" /> Schedule Patient Follow-Up
+              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {showForm ? "Hide Booking Form" : "Book New Appointment"}
             </button>
-            <button
-              onClick={handleOpenReferral}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
-            >
-              <Stethoscope className="w-4 h-4" /> Refer Patient to Specialist
-            </button>
-          </div>
-        )}
+          )}
+
+          {/* Doctor Quick Action Buttons */}
+          {user?.role === "DOCTOR" && (
+            <>
+              <button
+                onClick={handleOpenFollowUp}
+                className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" /> Schedule Patient Follow-Up
+              </button>
+              <button
+                onClick={handleOpenReferral}
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
+              >
+                <Stethoscope className="w-4 h-4" /> Refer Patient to Specialist
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -179,14 +198,12 @@ export default function AppointmentsPage() {
                   </>
                 )}
               </h2>
-              {user?.role === "DOCTOR" && (
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+              <button
+                onClick={() => setShowForm(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             {error && (
@@ -332,7 +349,9 @@ export default function AppointmentsPage() {
 
         {/* Appointments List Table */}
         <div className={`${showForm ? "lg:col-span-2" : "lg:col-span-3"} bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4 transition-all duration-300`}>
-          <h2 className="text-lg font-bold text-slate-800">Your Appointments Schedule</h2>
+          <h2 className="text-lg font-bold text-slate-800">
+            {user?.role === "ADMIN" ? "Master Hospital Appointments Schedule Table" : "Your Appointments Schedule"}
+          </h2>
 
           {appointments.length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-2xl">
