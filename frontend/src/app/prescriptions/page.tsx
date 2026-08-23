@@ -138,7 +138,7 @@ export default function PrescriptionsPage() {
                 <div className="font-bold text-xs text-slate-800">Patient: {rx.patientName}</div>
                 <div className="text-[11px] text-slate-500 mt-0.5">{rx.doctorName} ({rx.doctorSpecialization})</div>
                 <div className="text-[10px] text-slate-400 mt-2 font-medium">
-                  Issued: {new Date(rx.createdAt).toLocaleDateString()}
+                  Issued: {rx.createdAt ? new Date(rx.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : new Date().toLocaleDateString("en-GB")}
                 </div>
               </div>
             ))
@@ -170,7 +170,7 @@ export default function PrescriptionsPage() {
                 <div>
                   <span className="font-semibold text-slate-400 uppercase tracking-wider block">Prescription Date</span>
                   <span className="font-bold text-slate-800">
-                    {new Date(selectedPrescription.createdAt).toLocaleDateString()}
+                    {selectedPrescription.createdAt ? new Date(selectedPrescription.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }) : new Date().toLocaleDateString("en-GB")}
                   </span>
                 </div>
               </div>
