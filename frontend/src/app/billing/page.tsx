@@ -269,8 +269,8 @@ export default function BillingPage() {
                       <tr key={item.id}>
                         <td className="py-3 font-semibold text-slate-800">{item.description}</td>
                         <td className="py-3 text-center">{item.quantity}</td>
-                        <td className="py-3 text-right">${item.unitPrice.toFixed(2)}</td>
-                        <td className="py-3 text-right font-bold">${item.totalPrice.toFixed(2)}</td>
+                        <td className="py-3 text-right">${(item.unitPrice ?? 0).toFixed(2)}</td>
+                        <td className="py-3 text-right font-bold">${(item.totalPrice ?? (item.unitPrice ?? 0) * item.quantity).toFixed(2)}</td>
                       </tr>
                     ))
                   ) : (
