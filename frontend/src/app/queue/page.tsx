@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { appointmentService, doctorService, queueService } from "@/services/api";
 import { Appointment, Doctor, QueueEntry } from "@/types";
-import { Users, UserCheck, PhoneCall, CheckCircle2, Clock, Activity, Ticket, Stethoscope } from "lucide-react";
+import { Users, UserCheck, PhoneCall, CheckCircle2, Clock, Activity, Ticket, Stethoscope, AlertTriangle, CreditCard } from "lucide-react";
 
 export default function QueuePage() {
   const { user } = useAuth();
@@ -45,7 +46,8 @@ export default function QueuePage() {
       setActionMessage(`Patient checked in! Generated Queue Token Q-${entry.queueNumber}`);
       fetchQueueData();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Check-in failed");
+      const msg = err.response?.data?.message || "Check-in failed";
+      setActionMessage(msg);
     }
   };
 
@@ -123,9 +125,29 @@ export default function QueuePage() {
       </div>
 
       {actionMessage && (
-        <div className="p-4 bg-sky-50 border border-sky-200 text-sky-800 rounded-2xl text-xs font-semibold flex items-center gap-2">
-          <Ticket className="w-4 h-4 text-sky-600" />
-          <span>{actionMessage}</span>
+        <div
+          className={`p-4 rounded-2xl text-xs font-semibold flex items-center justify-between gap-2 border ${
+            actionMessage.includes("Payment Required")
+              ? "bg-rose-50 border-rose-200 text-rose-800"
+              : "bg-sky-50 border-sky-200 text-sky-800"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {actionMessage.includes("Payment Required") ? (
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            ) : (
+              <Ticket className="w-4 h-4 text-sky-600 shrink-0" />
+            )}
+            <span>{actionMessage}</span>
+          </div>
+          {actionMessage.includes("Payment Required") && (
+            <Link
+              href="/billing"
+              className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shrink-0 transition-colors flex items-center gap-1.5 shadow-sm"
+            >
+              <CreditCard className="w-3.5 h-3.5" /> Collect Payment at Billing Counter &rarr;
+            </Link>
+          )}
         </div>
       )}
 

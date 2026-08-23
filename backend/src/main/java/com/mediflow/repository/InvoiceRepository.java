@@ -13,6 +13,7 @@ import java.util.Optional;
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
+    Optional<Invoice> findByAppointmentId(Long appointmentId);
     List<Invoice> findByPatientIdOrderByCreatedAtDesc(Long patientId);
     List<Invoice> findByStatus(InvoiceStatus status);
     

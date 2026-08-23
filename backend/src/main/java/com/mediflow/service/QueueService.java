@@ -21,6 +21,7 @@ public class QueueService {
 
     private final QueueEntryRepository queueEntryRepository;
     private final AppointmentRepository appointmentRepository;
+    private final InvoiceRepository invoiceRepository;
     private final NotificationService notificationService;
 
     @Transactional
@@ -28,8 +29,17 @@ public class QueueService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with ID: " + appointmentId));
 
-        // Demo flexibility: allow check-in for scheduled appointments
-        // if (!appointment.getAppointmentDate().equals(LocalDate.now())) { ... }
+        // Real-world hospital rule: Patient must pay consultation fee invoice before check-in & token generation
+        java.util.Optional<Invoice> invoiceOpt = invoiceRepository.findByAppointmentId(appointmentId);
+        if (invoiceOpt.isPresent()) {
+            Invoice invoice = invoiceOpt.get();
+            if (invoice.getStatus() != InvoiceStatus.PAID) {
+                throw new BadRequestException(
+                        String.format("Payment Required: Invoice %s ($%.2f) for patient %s is unpaid (%s). Front desk must collect payment before check-in & token generation.",
+                                invoice.getInvoiceNumber(), invoice.getTotalAmount(), appointment.getPatient().getUser().getFullName(), invoice.getStatus())
+                );
+            }
+        }
 
         if (queueEntryRepository.findByAppointmentId(appointmentId).isPresent()) {
             throw new BadRequestException("Patient is already checked into the queue");
