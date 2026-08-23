@@ -2,8 +2,7 @@ import "./globals.css";
 import React from "react";
 import { AuthProvider } from "@/lib/auth-context";
 import QueryProvider from "@/components/QueryProvider";
-import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar";
+import ClientAppLayout from "@/components/ClientAppLayout";
 
 export const metadata = {
   title: "MEDIFLOW — Smart Hospital Workflow Management Platform",
@@ -16,13 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-slate-50 min-h-screen text-slate-900 antialiased">
         <QueryProvider>
           <AuthProvider>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <Navbar />
-                <main className="flex-1 p-8 overflow-y-auto">{children}</main>
-              </div>
-            </div>
+            <ClientAppLayout>{children}</ClientAppLayout>
           </AuthProvider>
         </QueryProvider>
       </body>

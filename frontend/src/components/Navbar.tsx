@@ -4,9 +4,13 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { notificationService } from "@/services/api";
 import { Notification } from "@/types";
-import { Bell, LogOut, User as UserIcon, Check } from "lucide-react";
+import { Bell, LogOut, Check, Menu } from "lucide-react";
 
-export default function Navbar() {
+interface NavbarProps {
+  onToggleMobile?: () => void;
+}
+
+export default function Navbar({ onToggleMobile }: NavbarProps) {
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -33,14 +37,25 @@ export default function Navbar() {
   if (!user) return null;
 
   return (
-    <header className="h-16 border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-30 px-8 flex items-center justify-between shadow-sm print:hidden">
+    <header className="h-16 border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-8 flex items-center justify-between shadow-sm print:hidden">
       <div className="flex items-center gap-3">
-        <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+        {/* Mobile Hamburger Button */}
+        {onToggleMobile && (
+          <button
+            onClick={onToggleMobile}
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            title="Open Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
+        <h2 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight truncate">
           Hospital Operations Portal
         </h2>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Notification Bell Dropdown */}
         <div className="relative">
           <button
@@ -56,7 +71,7 @@ export default function Navbar() {
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+            <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
                 <h4 className="font-bold text-sm text-slate-800">Notifications</h4>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
@@ -96,17 +111,17 @@ export default function Navbar() {
         </div>
 
         {/* User Dropdown */}
-        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-          <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center border border-sky-200">
+        <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 border-l border-slate-200">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-sky-100 text-sky-700 font-bold text-xs sm:text-sm flex items-center justify-center border border-sky-200 shrink-0">
             {user.firstName ? user.firstName[0] : "U"}
           </div>
-          <div className="hidden md:block">
-            <div className="text-sm font-semibold text-slate-800 leading-tight">{user.fullName}</div>
-            <div className="text-xs text-slate-500">{user.email}</div>
+          <div className="hidden sm:block">
+            <div className="text-xs sm:text-sm font-semibold text-slate-800 leading-tight">{user.fullName}</div>
+            <div className="text-[11px] text-slate-500">{user.email}</div>
           </div>
           <button
             onClick={logout}
-            className="ml-2 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
             title="Log out"
           >
             <LogOut className="w-5 h-5" />
