@@ -115,7 +115,7 @@ export default function ConsultationsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Doctor Consultation Writer */}
-        {(user?.role === "DOCTOR" || user?.role === "ADMIN") && (
+        {user?.role === "DOCTOR" && (
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
               <Stethoscope className="w-5 h-5 text-sky-600" /> New Consultation Notes
@@ -276,7 +276,7 @@ export default function ConsultationsPage() {
         )}
 
         {/* Consultation History */}
-        <div className={`${user?.role === "DOCTOR" || user?.role === "ADMIN" ? "lg:col-span-2" : "lg:col-span-3"} bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4`}>
+        <div className={`${user?.role === "DOCTOR" ? "lg:col-span-2" : "lg:col-span-3"} bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4`}>
           <h2 className="text-lg font-bold text-slate-800">Consultation History & Medical Notes</h2>
 
           {consultations.length === 0 ? (
