@@ -15,11 +15,12 @@ import {
   Bot,
   ShieldCheck,
   Activity,
+  LogOut,
 } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   if (!user) return null;
 
@@ -48,12 +49,21 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* User Profile Info (Name & Role) */}
+      {/* User Profile Info & Sign Out Button */}
       <div className="px-6 py-3.5 border-b border-slate-800/60 bg-slate-950/40 flex items-center justify-between">
-        <span className="font-semibold text-white truncate text-sm">{user.fullName}</span>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-400 border border-sky-500/30">
-          {role}
-        </span>
+        <div className="truncate pr-2">
+          <span className="font-semibold text-white truncate text-sm block">{user.fullName}</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-400 border border-sky-500/30 inline-block mt-0.5">
+            {role}
+          </span>
+        </div>
+        <button
+          onClick={logout}
+          className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-colors shrink-0"
+          title="Sign Out"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Navigation */}
