@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { appointmentService, consultationService, aiService } from "@/services/api";
 import { Appointment, Consultation } from "@/types";
-import { Stethoscope, Sparkles, FileText, CheckCircle2, AlertCircle, Activity, Heart, Thermometer } from "lucide-react";
+import { Stethoscope, Sparkles, FileText, CheckCircle2, AlertCircle, Activity, Heart, Thermometer, ShieldCheck } from "lucide-react";
 
 export default function ConsultationsPage() {
   const { user } = useAuth();
@@ -12,16 +12,28 @@ export default function ConsultationsPage() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [selectedApptId, setSelectedApptId] = useState<number | "">("");
 
+  // Standard Medical ICD-10 Codes
+  const icd10Codes = [
+    { code: "I10", label: "I10 - Essential (Primary) Hypertension" },
+    { code: "J20.9", label: "J20.9 - Acute Bronchitis, Unspecified" },
+    { code: "E11.9", label: "E11.9 - Type 2 Diabetes Mellitus" },
+    { code: "J06.9", label: "J06.9 - Acute Upper Respiratory Infection" },
+    { code: "M54.5", label: "M54.5 - Low Back Pain, Unspecified" },
+    { code: "R51.9", label: "R51.9 - Headache & Migraine Aura" },
+  ];
+
   // Vitals State
   const [bp, setBp] = useState("120/80 mmHg");
   const [pulse, setPulse] = useState("72 bpm");
   const [temp, setTemp] = useState("98.6 °F");
   const [spo2, setSpo2] = useState("99%");
+  const [respRate, setRespRate] = useState("16 /min");
 
   // Form State
   const [symptoms, setSymptoms] = useState("");
   const [observations, setObservations] = useState("");
-  const [diagnosis, setDiagnosis] = useState("");
+  const [selectedIcd, setSelectedIcd] = useState("I10");
+  const [customDiagnosis, setCustomDiagnosis] = useState("");
   const [treatmentPlan, setTreatmentPlan] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
   const [aiSummary, setAiSummary] = useState("");
@@ -49,16 +61,13 @@ export default function ConsultationsPage() {
   };
 
   const handleGenerateAISummary = async () => {
-    if (!diagnosis) {
-      alert("Please provide at least a diagnosis before generating an AI summary.");
-      return;
-    }
+    const activeDiagnosis = customDiagnosis || icd10Codes.find((c) => c.code === selectedIcd)?.label || "Clinical Evaluation";
     setIsGeneratingAI(true);
     try {
       const summaryText = await aiService.generateConsultationSummary({
         symptoms,
-        observations: `[VITALS] BP: ${bp}, Pulse: ${pulse}, Temp: ${temp}, SpO2: ${spo2} | ${observations}`,
-        diagnosis,
+        observations: `[VITALS] BP: ${bp}, Pulse: ${pulse}, Temp: ${temp}, SpO2: ${spo2}, RR: ${respRate} | ${observations}`,
+        diagnosis: activeDiagnosis,
         treatmentNotes: treatmentPlan,
       });
       setAiSummary(summaryText);
@@ -77,23 +86,24 @@ export default function ConsultationsPage() {
     setIsSubmitting(true);
     setMessage("");
 
-    const fullObservations = `[VITALS] BP: ${bp}, Pulse: ${pulse}, Temp: ${temp}, SpO2: ${spo2} | ${observations}`;
+    const activeDiagnosis = customDiagnosis || icd10Codes.find((c) => c.code === selectedIcd)?.label || "Essential Hypertension";
+    const fullObservations = `[VITALS] BP: ${bp}, Pulse: ${pulse}, Temp: ${temp}, SpO2: ${spo2}, RR: ${respRate} | ${observations}`;
 
     try {
       await consultationService.create({
         appointmentId: Number(selectedApptId),
         symptoms,
         observations: fullObservations,
-        diagnosis,
+        diagnosis: activeDiagnosis,
         treatmentPlan,
         followUpDate: followUpDate || undefined,
         aiSummary,
       });
 
-      setMessage("Consultation record saved successfully!");
+      setMessage("Clinical consultation record saved successfully!");
       setSymptoms("");
       setObservations("");
-      setDiagnosis("");
+      setCustomDiagnosis("");
       setTreatmentPlan("");
       setAiSummary("");
       setSelectedApptId("");
@@ -109,8 +119,8 @@ export default function ConsultationsPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Clinical Consultations</h1>
-        <p className="text-sm text-slate-500 mt-1">Doctor clinical documentation, vital signs tracker & AI summary assistant</p>
+        <h1 className="text-2xl font-bold text-slate-800">Clinical Consultation EMR</h1>
+        <p className="text-sm text-slate-500 mt-1">Doctor EMR clinical documentation, ICD-10 coding, vital signs tracker & AI summary</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -118,7 +128,7 @@ export default function ConsultationsPage() {
         {user?.role === "DOCTOR" && (
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-sky-600" /> New Consultation Notes
+              <Stethoscope className="w-5 h-5 text-sky-600" /> New Clinical SOAP Notes
             </h2>
 
             {message && (
@@ -148,7 +158,7 @@ export default function ConsultationsPage() {
               {/* Patient Vital Signs Entry */}
               <div className="p-3 bg-rose-50/50 border border-rose-100 rounded-2xl space-y-2">
                 <label className="text-xs font-bold text-rose-800 flex items-center gap-1.5">
-                  <Activity className="w-4 h-4 text-rose-600" /> Patient Vital Signs
+                  <Activity className="w-4 h-4 text-rose-600" /> Clinical Vital Signs
                 </label>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
@@ -195,46 +205,57 @@ export default function ConsultationsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Presenting Symptoms</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Subjective Symptoms</label>
                 <textarea
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
                   rows={2}
-                  placeholder="Patient symptoms..."
+                  placeholder="Patient presenting complaints & history of illness..."
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Clinical Observations & Examination</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Objective Exam & Observations</label>
                 <textarea
                   value={observations}
                   onChange={(e) => setObservations(e.target.value)}
                   rows={2}
-                  placeholder="Physical exam findings, auscultation, lab results..."
+                  placeholder="Physical examination, heart/lung auscultation..."
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800"
                 />
               </div>
 
+              {/* ICD-10 Primary Diagnosis Selection */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Primary Diagnosis</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Primary ICD-10 Diagnosis Code</label>
+                <select
+                  value={selectedIcd}
+                  onChange={(e) => setSelectedIcd(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 mb-1"
+                >
+                  {icd10Codes.map((icd) => (
+                    <option key={icd.code} value={icd.code}>
+                      {icd.label}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
-                  value={diagnosis}
-                  onChange={(e) => setDiagnosis(e.target.value)}
-                  required
-                  placeholder="e.g. Essential Hypertension, Acute Bronchitis"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800"
+                  value={customDiagnosis}
+                  onChange={(e) => setCustomDiagnosis(e.target.value)}
+                  placeholder="Or enter custom diagnosis..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Treatment Plan & Medication Notes</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Treatment Plan & Lab Orders</label>
                 <textarea
                   value={treatmentPlan}
                   onChange={(e) => setTreatmentPlan(e.target.value)}
                   rows={2}
-                  placeholder="Medication plan, dietary restrictions, lab orders..."
+                  placeholder="Medication regimen, dietary advice, follow-up..."
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800"
                 />
               </div>
@@ -243,7 +264,7 @@ export default function ConsultationsPage() {
               <div className="p-4 bg-sky-50/70 border border-sky-100 rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-sky-800 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-sky-600" /> AI Consultation Summary
+                    <Sparkles className="w-4 h-4 text-sky-600" /> AI Clinical Summary Note
                   </span>
                   <button
                     type="button"
@@ -251,7 +272,7 @@ export default function ConsultationsPage() {
                     disabled={isGeneratingAI}
                     className="px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-[11px] rounded-lg transition-colors"
                   >
-                    {isGeneratingAI ? "Generating..." : "Auto-Generate AI Summary"}
+                    {isGeneratingAI ? "Generating..." : "Generate AI Summary"}
                   </button>
                 </div>
                 {aiSummary && (
@@ -269,7 +290,7 @@ export default function ConsultationsPage() {
                 disabled={isSubmitting || !selectedApptId}
                 className="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold text-xs rounded-xl shadow-md transition-all"
               >
-                {isSubmitting ? "Saving..." : "Save Consultation Record"}
+                {isSubmitting ? "Saving..." : "Save EMR Consultation Record"}
               </button>
             </form>
           </div>
@@ -289,7 +310,7 @@ export default function ConsultationsPage() {
                     <div>
                       <h4 className="font-bold text-sm text-slate-800">{c.diagnosis}</h4>
                       <p className="text-xs text-slate-500">
-                        Patient: {c.patientName} • Doctor: {c.doctorName}
+                        Patient: {c.patientName} • Attending Doctor: {c.doctorName}
                       </p>
                     </div>
                     <span className="text-[11px] font-semibold text-slate-400">
@@ -311,7 +332,7 @@ export default function ConsultationsPage() {
                   {c.aiSummary && (
                     <div className="p-3 bg-sky-50/80 border border-sky-100 rounded-xl text-xs text-slate-700">
                       <span className="font-bold text-sky-700 block mb-1 flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5" /> AI Summary Note:
+                        <Sparkles className="w-3.5 h-3.5" /> AI Clinical Summary:
                       </span>
                       {c.aiSummary}
                     </div>
