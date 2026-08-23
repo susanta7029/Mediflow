@@ -39,9 +39,9 @@ public class DashboardService {
             Doctor doctor = doctorRepository.findByUserId(currentUser.getId()).orElse(null);
             if (doctor != null) {
                 todayAppointments = appointmentRepository.countByDoctorIdAndAppointmentDate(doctor.getId(), LocalDate.now());
-                completedConsultations = appointmentRepository.countByDoctorIdAndAppointmentDateAndStatus(doctor.getId(), LocalDate.now(), AppointmentStatus.COMPLETED);
+                completedConsultations = appointmentRepository.countByDoctorIdAndStatus(doctor.getId(), AppointmentStatus.COMPLETED);
+                totalPatients = appointmentRepository.countByDoctorId(doctor.getId());
                 recentAppointments = appointmentRepository.findByDoctorIdOrderByAppointmentDateDescTimeSlotDesc(doctor.getId()).stream()
-                        .limit(5)
                         .map(appointmentService::mapToDto)
                         .toList();
             } else {

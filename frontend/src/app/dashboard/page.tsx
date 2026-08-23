@@ -151,7 +151,7 @@ export default function DashboardPage() {
             </p>
             <h3 className="text-2xl font-extrabold text-slate-800 mt-1">
               {role === "DOCTOR"
-                ? stats?.recentAppointments?.length || 0
+                ? stats?.totalPatients || 0
                 : role === "PATIENT"
                 ? stats?.recentAppointments?.filter((a) => a.status === "COMPLETED").length || 0
                 : `$${(stats?.totalRevenue || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
