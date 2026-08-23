@@ -25,6 +25,7 @@ public class ConsultationService {
     private final QueueEntryRepository queueEntryRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final InvoiceRepository invoiceRepository;
     private final PrescriptionService prescriptionService;
     private final NotificationService notificationService;
 
@@ -32,6 +33,18 @@ public class ConsultationService {
     public ConsultationDto createConsultation(ConsultationRequest request) {
         Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with ID: " + request.getAppointmentId()));
+
+        // Real-world hospital rule: Consultation fee invoice MUST be PAID before completing consultation
+        Optional<Invoice> invoiceOpt = invoiceRepository.findByAppointmentId(appointment.getId());
+        if (invoiceOpt.isPresent()) {
+            Invoice invoice = invoiceOpt.get();
+            if (invoice.getStatus() != InvoiceStatus.PAID) {
+                throw new BadRequestException(
+                        String.format("Payment Required: Cannot finalize consultation for patient %s because consultation fee invoice %s ($%.2f) is unpaid (%s). Front desk must collect payment first.",
+                                appointment.getPatient().getUser().getFullName(), invoice.getInvoiceNumber(), invoice.getTotalAmount(), invoice.getStatus())
+                );
+            }
+        }
 
         if (consultationRepository.findByAppointmentId(request.getAppointmentId()).isPresent()) {
             throw new BadRequestException("Consultation record already exists for this appointment");

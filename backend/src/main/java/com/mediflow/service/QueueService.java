@@ -130,8 +130,17 @@ public class QueueService {
         QueueEntry entry = queueEntryRepository.findById(queueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Queue entry not found with ID: " + queueId));
 
-        entry.setStatus(status);
         if (status == QueueStatus.COMPLETED) {
+            java.util.Optional<Invoice> invoiceOpt = invoiceRepository.findByAppointmentId(entry.getAppointment().getId());
+            if (invoiceOpt.isPresent()) {
+                Invoice invoice = invoiceOpt.get();
+                if (invoice.getStatus() != InvoiceStatus.PAID) {
+                    throw new BadRequestException(
+                            String.format("Payment Required: Cannot mark consultation complete for patient %s because consultation fee invoice %s ($%.2f) is unpaid (%s). Front desk must collect payment first.",
+                                    entry.getPatient().getUser().getFullName(), invoice.getInvoiceNumber(), invoice.getTotalAmount(), invoice.getStatus())
+                    );
+                }
+            }
             entry.setCompletedTime(LocalDateTime.now());
             Appointment appt = entry.getAppointment();
             appt.setStatus(AppointmentStatus.COMPLETED);
