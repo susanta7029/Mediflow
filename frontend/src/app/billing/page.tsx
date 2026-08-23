@@ -11,7 +11,7 @@ export default function BillingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [viewReceiptInvoice, setViewReceiptInvoice] = useState<Invoice | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState("CREDIT_CARD");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
@@ -63,7 +63,7 @@ export default function BillingPage() {
     <div className="space-y-8">
       <div className="print:hidden">
         <h1 className="text-2xl font-bold text-slate-800">Billing & Invoices</h1>
-        <p className="text-sm text-slate-500 mt-1">Manage consultation fee invoices, patient billing receipts, and payments</p>
+        <p className="text-sm text-slate-500 mt-1">Manage consultation fee invoices, patient billing receipts, and counter payments</p>
       </div>
 
       <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4 print:hidden">
@@ -110,7 +110,8 @@ export default function BillingPage() {
                           onClick={() => setSelectedInvoice(inv)}
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] rounded-lg transition-colors shadow-sm flex items-center gap-1"
                         >
-                          <CreditCard className="w-3.5 h-3.5" /> Pay Invoice
+                          <CreditCard className="w-3.5 h-3.5" />
+                          {user?.role === "PATIENT" ? "Pay Online" : "Collect Payment"}
                         </button>
                       )}
                       <button
@@ -128,14 +129,16 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* Mock Payment Gateway Modal */}
+      {/* Payment Gateway / Counter Cashier Modal */}
       {selectedInvoice && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 print:hidden">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-bold text-lg text-slate-800">Checkout Payment</h3>
-                <p className="text-xs text-slate-500">{selectedInvoice.invoiceNumber}</p>
+                <h3 className="font-bold text-lg text-slate-800">
+                  {user?.role === "PATIENT" ? "Online Payment Checkout" : "Record Desk Payment Collected"}
+                </h3>
+                <p className="text-xs text-slate-500">Invoice: {selectedInvoice.invoiceNumber} • Patient: {selectedInvoice.patientName}</p>
               </div>
               <button
                 onClick={() => setSelectedInvoice(null)}
@@ -148,20 +151,24 @@ export default function BillingPage() {
             {paymentSuccess ? (
               <div className="text-center py-8 space-y-3">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto animate-bounce" />
-                <h4 className="font-bold text-lg text-slate-800">Payment Successful!</h4>
-                <p className="text-xs text-slate-500">Transaction ID recorded in system.</p>
+                <h4 className="font-bold text-lg text-slate-800">
+                  {user?.role === "PATIENT" ? "Payment Successful!" : "Desk Payment Recorded!"}
+                </h4>
+                <p className="text-xs text-slate-500">Official receipt generated for patient.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="bg-slate-50 p-4 rounded-2xl flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-medium">Total Amount Due</span>
+                  <span className="text-xs text-slate-500 font-medium">Total Bill Amount</span>
                   <span className="text-2xl font-extrabold text-slate-900">${selectedInvoice.totalAmount.toFixed(2)}</span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2">Select Payment Gateway</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    {user?.role === "PATIENT" ? "Select Payment Method" : "Payment Mode Received at Desk"}
+                  </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {["CREDIT_CARD", "UPI", "STRIPE_MOCK"].map((method) => (
+                    {(user?.role === "PATIENT" ? ["CREDIT_CARD", "UPI", "STRIPE_MOCK"] : ["CASH", "CARD_POS", "UPI_COUNTER"]).map((method) => (
                       <button
                         key={method}
                         type="button"
@@ -180,7 +187,11 @@ export default function BillingPage() {
 
                 <div className="p-3 bg-sky-50 border border-sky-100 rounded-xl text-[11px] text-sky-800 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-sky-600 shrink-0" />
-                  <span>Secure instant payment gateway processing</span>
+                  <span>
+                    {user?.role === "PATIENT"
+                      ? "Secure instant online checkout gateway"
+                      : "Record patient cash/card payment at reception counter"}
+                  </span>
                 </div>
 
                 <button
@@ -188,7 +199,11 @@ export default function BillingPage() {
                   disabled={isProcessing}
                   className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
                 >
-                  {isProcessing ? "Processing Payment..." : `Pay $${selectedInvoice.totalAmount.toFixed(2)} Now`}
+                  {isProcessing
+                    ? "Processing..."
+                    : user?.role === "PATIENT"
+                    ? `Pay $${selectedInvoice.totalAmount.toFixed(2)} Online`
+                    : `Confirm $${selectedInvoice.totalAmount.toFixed(2)} Payment Collected`}
                 </button>
               </div>
             )}
