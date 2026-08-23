@@ -93,9 +93,9 @@ export default function QueuePage() {
           <p className="text-sm text-slate-500 mt-1">Live patient token call system and waiting room flow</p>
         </div>
 
-        {(user?.role === "DOCTOR" || user?.role === "ADMIN" || user?.role === "RECEPTIONIST") && (
+        {(user?.role === "DOCTOR" || user?.role === "RECEPTIONIST") && (
           <div className="flex items-center gap-3">
-            {user?.role !== "DOCTOR" && (
+            {user?.role === "RECEPTIONIST" && (
               <div className="relative">
                 <select
                   value={selectedDoctorId}
@@ -153,7 +153,7 @@ export default function QueuePage() {
               <div className="text-4xl font-extrabold text-white">Q-{currentPatientInRoom.queueNumber}</div>
               <div className="text-sm font-semibold text-slate-200">{currentPatientInRoom.patientName}</div>
               <div className="text-xs text-slate-400">Doctor: {currentPatientInRoom.doctorName}</div>
-              {(user?.role === "DOCTOR" || user?.role === "ADMIN") ? (
+              {user?.role === "DOCTOR" ? (
                 <button
                   onClick={() => handleStatusUpdate(currentPatientInRoom.id, "COMPLETED")}
                   className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl w-full transition-colors"
