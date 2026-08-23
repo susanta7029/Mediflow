@@ -98,7 +98,7 @@ export default function PrescriptionsPage() {
           <p className="text-sm text-slate-500 mt-1">Digital medical prescriptions & medication guidelines</p>
         </div>
         <div className="flex items-center gap-3 print:hidden">
-          {(user?.role === "DOCTOR" || user?.role === "ADMIN") && (
+          {user?.role === "DOCTOR" && (
             <button
               onClick={() => setIsModalOpen(true)}
               className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors print:hidden"
