@@ -105,7 +105,7 @@ export default function BillingPage() {
                   </td>
                   <td className="py-3.5">
                     <div className="flex items-center gap-2">
-                      {inv.status === "ISSUED" && (
+                      {inv.status === "ISSUED" && (user?.role === "PATIENT" || user?.role === "RECEPTIONIST") && (
                         <button
                           onClick={() => setSelectedInvoice(inv)}
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] rounded-lg transition-colors shadow-sm flex items-center gap-1"

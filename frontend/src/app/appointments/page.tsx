@@ -147,14 +147,14 @@ export default function AppointmentsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Admin / Receptionist Form Toggle */}
-          {(user?.role === "ADMIN" || user?.role === "RECEPTIONIST") && (
+          {/* Receptionist Form Toggle */}
+          {user?.role === "RECEPTIONIST" && (
             <button
               onClick={() => setShowForm(!showForm)}
               className="px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
             >
               {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-              {showForm ? "Hide Booking Form" : "Book New Appointment"}
+              {showForm ? "Hide Booking Form" : "Book Walk-In Appointment"}
             </button>
           )}
 
