@@ -1,14 +1,13 @@
-# Root Dockerfile for Backend Deployment
+# Build stage
 FROM eclipse-temurin:17-jdk-alpine AS build
+RUN apk add --no-cache maven
 WORKDIR /app
 COPY . .
 
-RUN if [ -f "mvnw" ]; then \
-        chmod +x mvnw && ./mvnw clean package -DskipTests; \
-    elif [ -f "backend/mvnw" ]; then \
-        cd backend && chmod +x mvnw && ./mvnw clean package -DskipTests && mkdir -p /app/target && cp target/mediflow-backend-1.0.0.jar /app/target/mediflow-backend-1.0.0.jar; \
+RUN if [ -f "backend/pom.xml" ]; then \
+        cd backend && mvn clean package -DskipTests && mkdir -p /app/target && cp target/mediflow-backend-1.0.0.jar /app/target/mediflow-backend-1.0.0.jar; \
     else \
-        echo "mvnw not found!" && exit 1; \
+        mvn clean package -DskipTests && mkdir -p /app/target && cp target/mediflow-backend-1.0.0.jar /app/target/mediflow-backend-1.0.0.jar; \
     fi
 
 # Run stage
